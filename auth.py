@@ -19,10 +19,18 @@ def login():
         cookie_expiry_days=30
     )
 
-    # ✅ CORRECT USAGE (no positional args)
-    name, authentication_status, username = authenticator.login(
-        location="main"
-    )
+    result = authenticator.login(location="main")
+
+    # ✅ Handle both 2‑tuple and 3‑tuple safely
+    if isinstance(result, tuple):
+        if len(result) == 3:
+            name, authentication_status, username = result
+        else:
+            authentication_status, username = result
+            name = username
+    else:
+        authentication_status = None
+        name = None
 
     if authentication_status:
         st.session_state.logged_in = True
@@ -31,3 +39,4 @@ def login():
         st.error("Invalid username or password")
     else:
         st.warning("Please login to continue")
+``
