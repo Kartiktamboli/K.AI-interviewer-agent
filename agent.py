@@ -1,36 +1,43 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
-import scoring
-from question_bank import QUESTION_BANK
+from scoring import score_answer
+from copilot_client import fetch_questions, copilot_evaluate
+
 
 def run_interview(domain):
-    questions = QUESTION_BANK[domain]
-    total_score = 0
+    st.subheader("Interview In Progress")
 
-    st.subheader(f"📌 {domain} Interview")
+    if "questions" not in st.session_state:
+        st.session_state.questions = fetch_questions(domain, "Mid")
+        st.session_state.answers = {}
+        st.session_state.submitted = False
 
-    for i, q in enumerate(questions, 1):
-        st.markdown(f"**Q{i}. {q}**")
-        answer = st.text_area("Your answer:", key=f"{domain}_{i}")
+    for i, q in enumerate(st.session_state.questions):
+        st.markdown(f"**Q{i+1}. {q}**")
+        st.session_state.answers[i] = st.text_area(
+            "Answer",
+            key=f"ans_{i}",
+            value=st.session_state.answers.get(i, "")
+        )
 
-        if answer:
-            s = scoring.score_answer(answer)
-            total_score += s
+    col1, col2 = st.columns(2)
 
-            if s == 0:
-                st.warning("Answer is shallow. Please elaborate.")
-            elif s == 1:
-                st.info("Basic understanding observed.")
-            else:
-                st.success("Good depth and clarity.")
+    with col1:
+        if st.button("✅ Submit Interview"):
+            st.session_state.submitted = True
 
-        st.divider()
+    with col2:
+        if st.button("🧹 Clear Answers"):
+            st.session_state.answers = {}
+            st.rerun()
 
-    level = scoring.detect_level(total_score)
+    if st.session_state.submitted:
+        total = sum(score_answer(a) for a in st.session_state.answers.values())
+        transcript = "\n".join(st.session_state.answers.values())
 
-    st.success("✅ Interview Completed")
-    st.markdown(f"### 🎯 Detected Level: **{level}**")
-    st.markdown(f"**Total Score:** {total_score} / {len(questions)*2}")
+        st.success("Interview Submitted")
+        st.info("Opening evaluation window...")
+
+        with st.expander("📊 Interview Result", expanded=True):
+            st.markdown(f"**Total Score:** {total}")
+            st.markdown(copilot_evaluate(transcript, total))
