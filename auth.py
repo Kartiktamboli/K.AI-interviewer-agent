@@ -1,43 +1,32 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 
-USERS = {
-    "usernames": {
-        "admin": {
-            "name": "Admin",
-            "password": "$2b$12$KIXQbZ8zN2Xz0pC4H7rC6u8xj5cH1fE4J7HqY0pZzv9P9wZ8xYHqG"
-        }
-    }
+# ✅ Demo credentials (can be replaced later)
+VALID_USERS = {
+    "admin": "admin123",
+    "interviewer": "interview123"
 }
 
 def login():
-    authenticator = stauth.Authenticate(
-        credentials=USERS,
-        cookie_name="ai_interviewer",
-        key="secret_key",
-        cookie_expiry_days=30
-    )
+    st.title("🔐 Secure Login")
 
-    authenticator.login(location="main")
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("Login")
 
-    auth_status = st.session_state.get("authentication_status")
+    if submit:
+        if username in VALID_USERS and VALID_USERS[username] == password:
+            st.session_state.logged_in = True
+            st.session_state.user = username
+            st.success("✅ Login successful")
+            st.rerun()
+        else:
+            st.error("❌ Invalid username or password")
 
-    if auth_status:
-        st.session_state.logged_in = True
-        st.session_state.user = st.session_state.get("name", "User")
-        return True
-
-    if auth_status is False:
-        st.error("Invalid username or password")
-
-    return False
+    return st.session_state.get("logged_in", False)
 
 
 def logout():
-    authenticator = stauth.Authenticate(
-        credentials=USERS,
-        cookie_name="ai_interviewer",
-        key="secret_key",
-        cookie_expiry_days=30
-    )
-    authenticator.logout(location="sidebar")
+    if st.sidebar.button("🚪 Logout"):
+        st.session_state.clear()
+        st.rerun()
