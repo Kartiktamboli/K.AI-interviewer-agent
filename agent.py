@@ -1,6 +1,10 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import streamlit as st
+import scoring
 from question_bank import QUESTION_BANK
-from scoring import score_answer, detect_level
 
 def run_interview(domain):
     questions = QUESTION_BANK[domain]
@@ -13,7 +17,7 @@ def run_interview(domain):
         answer = st.text_area("Your answer:", key=f"{domain}_{i}")
 
         if answer:
-            s = score_answer(answer)
+            s = scoring.score_answer(answer)
             total_score += s
 
             if s == 0:
@@ -25,7 +29,7 @@ def run_interview(domain):
 
         st.divider()
 
-    level = detect_level(total_score)
+    level = scoring.detect_level(total_score)
 
     st.success("✅ Interview Completed")
     st.markdown(f"### 🎯 Detected Level: **{level}**")
