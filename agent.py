@@ -10,7 +10,9 @@ def run_interview(domain, resume_text):
         st.session_state.questions = fetch_questions(domain, resume_text)
         st.session_state.answers = {}
 
-    st.header("🧠 Interview In Progress")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.header("🧠 AI‑Driven Technical Interview")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     for i, q in enumerate(st.session_state.questions):
         st.markdown(f"**Q{i+1}. {q}**")
