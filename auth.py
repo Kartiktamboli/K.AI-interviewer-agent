@@ -1,8 +1,7 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 
-# Pre-generated password hash for "admin123"
-# Generated once using stauth.Hasher(["admin123"]).hash("admin123")
+# ✅ Pre-generated bcrypt hash for password: admin123
 USERS = {
     "usernames": {
         "admin": {
@@ -15,17 +14,20 @@ USERS = {
 def login():
     authenticator = stauth.Authenticate(
         USERS,
-        "ai_interviewer",
-        "secret_key",
-        30
+        cookie_name="ai_interviewer",
+        key="secret_key",
+        cookie_expiry_days=30
     )
 
-    name, status, _ = authenticator.login("Login", "main")
+    # ✅ CORRECT USAGE (no positional args)
+    name, authentication_status, username = authenticator.login(
+        location="main"
+    )
 
-    if status:
+    if authentication_status:
         st.session_state.logged_in = True
         st.session_state.user = name
-    elif status is False:
+    elif authentication_status is False:
         st.error("Invalid username or password")
     else:
         st.warning("Please login to continue")
