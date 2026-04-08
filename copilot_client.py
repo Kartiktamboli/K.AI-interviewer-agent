@@ -1,28 +1,35 @@
-
 import os
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
-def fetch_questions(domain: str, level: str, count: int = 5):
+def fetch_questions(domain, resume_text):
     prompt = f"""
     You are a senior IT interviewer.
-    Generate {count} unique, non-repetitive interview questions for domain: {domain}
-    Difficulty level: {level}
-    Return ONLY a numbered list.
+
+    Candidate Resume:
+    {resume_text}
+
+    Generate 5 unique interview questions for domain: {domain}.
+    Questions must adapt to the resume and increase in difficulty.
+    Return only numbered questions.
     """
-    resp = client.responses.create(
+
+    response = client.responses.create(
         model="gpt-4.1-mini",
         input=prompt
     )
-    text = resp.output_text
-    return [q.strip("- ") for q in text.split("\n") if q.strip()]
+
+    return [
+        q.strip("0123456789. ")
+        for q in response.output_text.split("\n")
+        if q.strip()
+    ]
 
 
-def copilot_evaluate(transcript: str, score: int):
+def copilot_evaluate(transcript, score):
     prompt = f"""
-    You are Microsoft Copilot acting as an interview evaluator.
+    You are Microsoft Copilot evaluating an interview.
 
     Transcript:
     {transcript}
@@ -30,14 +37,16 @@ def copilot_evaluate(transcript: str, score: int):
     Score: {score}
 
     Provide:
-    1. Strengths
-    2. Weaknesses
-    3. Communication quality
-    4. Seniority (Junior/Mid/Senior)
-    5. Hire/No-Hire recommendation
+    - Strengths
+    - Weaknesses
+    - Communication
+    - Seniority (Junior/Mid/Senior)
+    - Hire or No-Hire decision
     """
-    resp = client.responses.create(
+
+    response = client.responses.create(
         model="gpt-4.1-mini",
         input=prompt
     )
-    return resp.output_text
+
+    return response.output_text
